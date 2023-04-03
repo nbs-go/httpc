@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.0
+
+- feat: Add PreRequest hook
+
 ## v0.2.0
 
 - feat: Support raw encoded []byte request body
