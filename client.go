@@ -55,8 +55,8 @@ func (c *Client) composeRequestBody(method Method, o *requestOptions) ([]byte, e
 		return j, nil
 	case MimeTypeUrlEncodedForm:
 		// Check if type is url.Values
-		form, ok := o.body.(url.Values)
-		if !ok {
+		form, fOk := o.body.(url.Values)
+		if !fOk {
 			return nil, fmt.Errorf("httpc: Unable to compose URL-Encoded Form, body is not url.Values type. Type = %T", o.body)
 		}
 		return []byte(form.Encode()), nil
