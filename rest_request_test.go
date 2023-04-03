@@ -3,16 +3,18 @@ package httpc_test
 import (
 	"context"
 	"github.com/nbs-go/httpc"
+	"net/http"
 	"net/url"
 	"testing"
 )
 
 type HttpBinResult struct {
-	Url  string            `json:"url"`
-	Args map[string]string `json:"args"`
-	Json map[string]string `json:"json"`
-	Form map[string]string `json:"form"`
-	Data string            `json:"data"`
+	Url     string            `json:"url"`
+	Args    map[string]string `json:"args"`
+	Json    map[string]string `json:"json"`
+	Form    map[string]string `json:"form"`
+	Headers map[string]string `json:"headers"`
+	Data    string            `json:"data"`
 }
 
 func TestRestGet(t *testing.T) {
@@ -149,5 +151,31 @@ func TestRestUrlEncodedForm(t *testing.T) {
 	if actual != expected {
 		t.Errorf("unexpected actual value. Expected = %s, Actual = %s", expected, actual)
 	}
+}
 
+func TestRestPreRequest(t *testing.T) {
+	req := httpc.NewRESTRequest(c, "GET", "/anything").
+		PreRequest(func(r *http.Request, rb []byte) {
+			// Add header
+			r.Header.Add("signature", "some-random-string")
+			// Add query
+			r.URL.RawQuery += "&message=hello"
+		})
+	// Do request
+	var respBody HttpBinResult
+	_, err := req.Do(context.Background(), &respBody)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	// Assert header
+	if v, _ := respBody.Headers["Signature"]; v != "some-random-string" {
+		t.Errorf("unexpected condition: signature does not passed to headers. Actual = %s", v)
+		return
+	}
+	// Assert query
+	if v, _ := respBody.Args["message"]; v != "hello" {
+		t.Errorf("unexpected condition: message mismatch")
+		return
+	}
 }

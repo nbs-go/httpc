@@ -2,10 +2,13 @@ package httpc
 
 import (
 	"errors"
+	"net/http"
 	"net/url"
 )
 
 type SetRequestOptionFn func(o *requestOptions)
+
+type PreRequestFn func(req *http.Request, reqBody []byte)
 
 func AddHeader(args ...string) SetRequestOptionFn {
 	return func(o *requestOptions) {
@@ -62,6 +65,12 @@ func Timeout(ms int) SetRequestOptionFn {
 	}
 }
 
+func PreRequest(fn PreRequestFn) SetRequestOptionFn {
+	return func(o *requestOptions) {
+		o.preRequest = fn
+	}
+}
+
 func SetUrlEncodedFormBody(body url.Values) SetRequestOptionFn {
 	return func(o *requestOptions) {
 		if body == nil {
@@ -74,10 +83,11 @@ func SetUrlEncodedFormBody(body url.Values) SetRequestOptionFn {
 }
 
 type requestOptions struct {
-	header  map[string]string
-	query   url.Values
-	body    interface{}
-	timeout int
+	header     map[string]string
+	query      url.Values
+	body       interface{}
+	timeout    int
+	preRequest PreRequestFn
 }
 
 // evaluateClientOptions evaluates Client options and override default value

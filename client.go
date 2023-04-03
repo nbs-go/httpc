@@ -110,6 +110,10 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	for k, v := range o.header {
 		req.Header.Set(k, v)
 	}
+	// Call pre-request hook if set
+	if o.preRequest != nil {
+		o.preRequest(req, reqBody)
+	}
 	// Do request
 	t := time.Now()
 	reqId := c.getRequestId(ctx)

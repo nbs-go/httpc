@@ -49,6 +49,11 @@ func (rr *RESTRequest) Body(b interface{}) *RESTRequest {
 	return rr
 }
 
+func (rr *RESTRequest) PreRequest(fn PreRequestFn) *RESTRequest {
+	rr.args = append(rr.args, PreRequest(fn))
+	return rr
+}
+
 // Do prepare REST request, do and parse response body to JSON dst
 func (rr *RESTRequest) Do(ctx context.Context, dst interface{}) (*http.Response, error) {
 	// Set "accept" header to Json mime type
