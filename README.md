@@ -2,6 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nbs-go/httpc)](https://goreportcard.com/report/github.com/nbs-go/httpc)
 [![GitHub license](https://img.shields.io/github/license/nbs-go/httpc)](https://github.com/nbs-go/httpc/blob/master/LICENSE)
+[![codecov](https://codecov.io/gh/nbs-go/httpc/branch/master/graph/badge.svg?token=NXJHYTA06I)](https://codecov.io/gh/nbs-go/httpc)
 
 A tiny HTTP Client wrapper based on Go http package.
 
