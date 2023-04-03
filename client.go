@@ -11,6 +11,7 @@ import (
 	logOption "github.com/nbs-go/nlogger/v2/option"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -52,6 +53,13 @@ func (c *Client) composeRequestBody(method Method, o *requestOptions) ([]byte, e
 			return nil, fmt.Errorf("httpc: Failed to compose request body. ContentType = %s, Error = %w", ct, err)
 		}
 		return j, nil
+	case MimeTypeUrlEncodedForm:
+		// Check if type is url.Values
+		form, ok := o.body.(url.Values)
+		if !ok {
+			return nil, fmt.Errorf("httpc: Unable to compose URL-Encoded Form, body is not url.Values type. Type = %T", o.body)
+		}
+		return []byte(form.Encode()), nil
 	}
 	c.log.Warnf("Unsupported Content-Type in %s in request body", ct)
 	return nil, nil

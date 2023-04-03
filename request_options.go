@@ -62,6 +62,17 @@ func Timeout(ms int) SetRequestOptionFn {
 	}
 }
 
+func SetUrlEncodedFormBody(body url.Values) SetRequestOptionFn {
+	return func(o *requestOptions) {
+		if body == nil {
+			return
+		}
+		// Set options
+		o.header[HeaderContentType] = MimeTypeUrlEncodedForm
+		o.body = body
+	}
+}
+
 type requestOptions struct {
 	header  map[string]string
 	query   url.Values

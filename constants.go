@@ -5,7 +5,8 @@ const (
 )
 
 const (
-	MimeTypeJson = "application/json"
+	MimeTypeJson           = "application/json"
+	MimeTypeUrlEncodedForm = "application/x-www-form-urlencoded"
 )
 
 type ContextKey int8
