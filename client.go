@@ -45,6 +45,12 @@ func (c *Client) composeRequestBody(method Method, o *requestOptions) ([]byte, e
 	if method == MethodGet || o.body == nil {
 		return nil, nil
 	}
+	// Check body is already composed to []byte
+	body, ok := o.body.([]byte)
+	if ok {
+		return body, nil
+	}
+	// Compose body by encoding-type
 	ct := o.header[HeaderContentType]
 	switch ct {
 	case MimeTypeJson:
