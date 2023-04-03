@@ -3,6 +3,7 @@ package httpc_test
 import (
 	"context"
 	"github.com/nbs-go/httpc"
+	"net/url"
 	"testing"
 )
 
@@ -10,6 +11,7 @@ type HttpBinResult struct {
 	Url  string            `json:"url"`
 	Args map[string]string `json:"args"`
 	Json map[string]string `json:"json"`
+	Form map[string]string `json:"form"`
 	Data string            `json:"data"`
 }
 
@@ -129,4 +131,23 @@ func TestRestXMLResponse(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 		return
 	}
+}
+
+func TestRestUrlEncodedForm(t *testing.T) {
+	form := make(url.Values)
+	form.Add("message", "hello")
+	req := httpc.NewRESTRequest(c, "POST", "/anything").AddOption(httpc.SetUrlEncodedFormBody(form))
+	var respBody HttpBinResult
+	_, err := req.Do(context.Background(), &respBody)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	// Assert value
+	expected := "hello"
+	actual, _ := respBody.Form["message"]
+	if actual != expected {
+		t.Errorf("unexpected actual value. Expected = %s, Actual = %s", expected, actual)
+	}
+
 }

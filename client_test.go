@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/nbs-go/httpc"
 	"net/http"
+	"net/url"
 	"testing"
 )
 
@@ -41,7 +42,7 @@ func TestNilContext(t *testing.T) {
 
 func TestUnimplementedBody(t *testing.T) {
 	resp, _, _ := c.DoRequest(context.Background(), "POST", "/post",
-		httpc.AddHeader(httpc.HeaderContentType, "application/xml"),
+		httpc.AddHeader(httpc.HeaderContentType, "application/octet-stream"),
 		httpc.SetBody(map[string]string{"message": "hello"}))
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("unexpected response status code. StatusCode = %d", resp.StatusCode)
@@ -89,7 +90,7 @@ func TestInvalidAddQueryArgs(t *testing.T) {
 	_, _, _ = c.DoRequest(context.Background(), "POST", "/post", httpc.AddQuery("key1", "value1", "key1"))
 }
 
-func TestEmptyBody(t *testing.T) {
+func TestNilJsonBody(t *testing.T) {
 	_, respBody, err := c.DoRequest(context.Background(), "POST", "/anything", httpc.SetJsonBody(nil))
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
@@ -104,6 +105,97 @@ func TestEmptyBody(t *testing.T) {
 	}
 	if result.Data != "" {
 		t.Errorf("unexpected condition: No data shall pass to request body")
+		return
+	}
+}
+
+func TestUrlEncodedFormBody(t *testing.T) {
+	form := make(url.Values)
+	form.Add("message", "hello")
+	_, respBody, err := c.DoRequest(context.Background(), "POST", "/anything", httpc.SetUrlEncodedFormBody(form))
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	// Convert response body
+	var result HttpBinResult
+	err = json.Unmarshal(respBody, &result)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	if len(result.Form) != 1 {
+		t.Errorf("unexpected condition: Form does not pass to request. Length = %d", len(result.Form))
+		return
+	}
+}
+
+func TestNilUrlEncodedFormBody(t *testing.T) {
+	_, respBody, err := c.DoRequest(context.Background(), "POST", "/anything", httpc.SetUrlEncodedFormBody(nil))
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	// Convert response body
+	var result HttpBinResult
+	err = json.Unmarshal(respBody, &result)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	if result.Data != "" {
+		t.Errorf("unexpected condition: No data shall pass to form request body")
+		return
+	}
+}
+
+func TestNilBody(t *testing.T) {
+	_, respBody, err := c.DoRequest(context.Background(), "POST", "/anything", httpc.SetBody(nil))
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	// Convert response body
+	var result HttpBinResult
+	err = json.Unmarshal(respBody, &result)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	if result.Data != "" {
+		t.Errorf("unexpected condition: No data shall pass to form request body")
+		return
+	}
+}
+
+func TestRawBytesBody(t *testing.T) {
+	_, respBody, err := c.DoRequest(context.Background(), "POST", "/anything", httpc.SetBody([]byte("hello")))
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	// Convert response body
+	var result HttpBinResult
+	err = json.Unmarshal(respBody, &result)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	actual := result.Data
+	expected := "hello"
+	if actual != expected {
+		t.Errorf("unexpected condition. Actual = %s, Expected = %s", actual, expected)
+		return
+	}
+}
+
+func TestInvalidUrlEncodedFormBody(t *testing.T) {
+	_, _, err := c.DoRequest(context.Background(), "POST", "/anything",
+		httpc.AddHeader(httpc.HeaderContentType, "application/x-www-form-urlencoded"),
+		httpc.SetBody("invalid form body"),
+	)
+	if err.Error() != "httpc: Unable to compose URL-Encoded Form, body is not url.Values type. Type = string" {
+		t.Errorf("unexpected error: %s", err)
 		return
 	}
 }
