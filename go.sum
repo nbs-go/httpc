@@ -1,0 +1,4 @@
+github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
+github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/nbs-go/nlogger/v2 v2.2.2 h1:TYDTjlAmsKVQzUGTdgR/HiAfFIA224wwEyQrciFgcsw=
+github.com/nbs-go/nlogger/v2 v2.2.2/go.mod h1:XOZewZpRKff0DQXmEZBI2o7APSg1SEwCv8nxAkCZ1cc=
