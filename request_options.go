@@ -16,7 +16,7 @@ func AddHeader(args ...string) SetRequestOptionFn {
 		}
 		// Apply headers
 		for i := 0; i < count; i += 2 {
-			o.header.Add(args[i], args[i+1])
+			o.header[args[i]] = args[i+1]
 		}
 	}
 }
@@ -51,7 +51,7 @@ func SetJsonBody(body interface{}) SetRequestOptionFn {
 			return
 		}
 		// Set options
-		o.header.Set(HeaderContentType, MimeTypeJson)
+		o.header[HeaderContentType] = MimeTypeJson
 		o.body = body
 	}
 }
@@ -63,7 +63,7 @@ func Timeout(ms int) SetRequestOptionFn {
 }
 
 type requestOptions struct {
-	header  url.Values
+	header  map[string]string
 	query   url.Values
 	body    interface{}
 	timeout int
@@ -72,7 +72,7 @@ type requestOptions struct {
 // evaluateClientOptions evaluates Client options and override default value
 func evaluateRequestOptions(args []SetRequestOptionFn) *requestOptions {
 	b := requestOptions{
-		header:  make(url.Values),
+		header:  make(map[string]string),
 		query:   make(url.Values),
 		body:    nil,
 		timeout: 10000, // Set default timeout to 10 second

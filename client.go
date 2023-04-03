@@ -41,10 +41,10 @@ func (c *Client) DoRequest(ctx context.Context, method Method, endpointPath stri
 }
 
 func (c *Client) composeRequestBody(method Method, o *requestOptions) ([]byte, error) {
-	if method == MethodGet || o.body == nil || !o.header.Has(HeaderContentType) {
+	if method == MethodGet || o.body == nil {
 		return nil, nil
 	}
-	ct := o.header.Get(HeaderContentType)
+	ct := o.header[HeaderContentType]
 	switch ct {
 	case MimeTypeJson:
 		j, err := json.Marshal(o.body)
@@ -91,6 +91,10 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	req, err := http.NewRequestWithContext(hCtx, method, u, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, nil, err
+	}
+	// Set header
+	for k, v := range o.header {
+		req.Header.Set(k, v)
 	}
 	// Do request
 	t := time.Now()
