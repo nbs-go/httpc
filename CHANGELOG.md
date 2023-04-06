@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.3.1
+
+- fix: Fix request and response log format and add Header in log
+
 ## v0.3.0
 
 - feat: Add PreRequest hook
