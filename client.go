@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -117,13 +118,13 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	// Do request
 	t := time.Now()
 	reqId := c.getRequestId(ctx)
-	c.log.Debugf("HTTP Request  (Id=%s) URL = %s %s, Body = %s", reqId, method, u, reqBody)
+	c.log.Debugf("HTTP Request  (Id=%s) URL=\"%s %s\" Header=%s Body=%s", reqId, method, u, composeHeaderLog(req.Header), reqBody)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		c.log.Error("HTTP Request  (Id=%s) Failed to do request", logOption.Format(reqId), logOption.Error(err))
 		return nil, nil, err
 	}
-	c.log.Debugf("HTTP Response (Id=%s) Status = %s, TimeElapsed = %s", reqId, resp.Status, time.Since(t))
+	c.log.Debugf("HTTP Response (Id=%s) Status=%s, TimeElapsed=%s", reqId, resp.Status, time.Since(t))
 	// Read response body
 	defer func() {
 		wErr := resp.Body.Close()
@@ -135,7 +136,7 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	if err != nil {
 		return nil, nil, err
 	}
-	c.log.Debugf("HTTP Response (Id=%s) Body = %s", reqId, respBody)
+	c.log.Debugf("HTTP Response (Id=%s) Header=%s Body=%s", reqId, composeHeaderLog(resp.Header), respBody)
 	return resp, respBody, nil
 }
 
@@ -147,4 +148,20 @@ func (c *Client) getRequestId(ctx context.Context) string {
 		return uuid.New().String()
 	}
 	return reqId
+}
+
+func composeHeaderLog(header http.Header) string {
+	if len(header) == 0 {
+		return ""
+	}
+	s := bytes.NewBufferString("")
+	for k := range header {
+		s.WriteString(`("`)
+		s.WriteString(k)
+		s.WriteString(`"="`)
+		s.WriteString(header.Get(k))
+		s.WriteString(`"),`)
+	}
+	// Remove last char
+	return strings.TrimSuffix(s.String(), ",")
 }
