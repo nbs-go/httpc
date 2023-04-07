@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.0
+
+- feat: Add DumpLog to log http request and response dump
+
 ## v0.3.1
 
 - fix: Fix request and response log format and add Header in log
