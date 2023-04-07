@@ -120,16 +120,13 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	// Do request
 	t := time.Now()
 	reqId := c.getRequestId(ctx)
+	c.logDumpRequest(req, reqId)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		c.log.Error("HTTP Request  (Id=%s) Failed to do request", logOption.Format(reqId), logOption.Error(err))
 		return nil, nil, err
 	}
-	// If log dump is enabled, then log dump
-	if c.logDump {
-		c.log.Debugf("\n---------- HTTP Request Dump -----------\n%s\n----------------------------------------", c.dumpRequest(req))
-		c.log.Debugf("\n---------- HTTP Response Dump ----------\n%s\n----------------------------------------", c.dumpResponse(resp))
-	}
+	c.logDumpResponse(resp, reqId)
 	// Read response body
 	defer func() {
 		wErr := resp.Body.Close()
@@ -155,20 +152,26 @@ func (c *Client) getRequestId(ctx context.Context) string {
 	return reqId
 }
 
-func (c *Client) dumpRequest(req *http.Request) string {
+func (c *Client) logDumpRequest(req *http.Request, reqId string) {
+	if !c.logDump {
+		return
+	}
 	dump, err := httputil.DumpRequest(req, true)
 	if err != nil {
 		c.log.Warnf("Unable to dump request. Error = %s", err)
-		return ""
+		return
 	}
-	return string(dump)
+	c.log.Debugf("\n---------- HTTP Request Dump -----------\n(RequestId=%s)\n%s\n----------------------------------------", reqId, dump)
 }
 
-func (c *Client) dumpResponse(resp *http.Response) string {
+func (c *Client) logDumpResponse(resp *http.Response, reqId string) {
+	if !c.logDump {
+		return
+	}
 	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
 		c.log.Warnf("Unable to dump response. Error = %s", err)
-		return ""
+		return
 	}
-	return string(dump)
+	c.log.Debugf("\n---------- HTTP Response Dump ----------\n(RequestId=%s)\n%s\n----------------------------------------", reqId, dump)
 }
