@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.4.1
+
+- fix: Fix missing request body on log dump
+
 ## v0.4.0
 
 - feat: Add DumpLog to log http request and response dump
