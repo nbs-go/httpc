@@ -154,7 +154,8 @@ func TestRestUrlEncodedForm(t *testing.T) {
 }
 
 func TestRestPreRequest(t *testing.T) {
-	req := httpc.NewRESTRequest(c, "GET", "/anything").
+	dc := httpc.NewClient("https://httpbin.org", httpc.Namespace("httpc_dump"), httpc.LogDump(true))
+	req := httpc.NewRESTRequest(dc, "GET", "/anything").
 		PreRequest(func(r *http.Request, rb []byte) {
 			// Add header
 			r.Header.Add("signature", "some-random-string")

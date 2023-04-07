@@ -11,8 +11,8 @@ import (
 	logOption "github.com/nbs-go/nlogger/v2/option"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -28,6 +28,7 @@ func NewClient(baseUrl string, args ...SetClientOptionsFn) *Client {
 		baseUrl:    baseUrl,
 		httpClient: c,
 		log:        cl,
+		logDump:    o.logDump,
 	}
 }
 
@@ -35,6 +36,7 @@ type Client struct {
 	baseUrl    string
 	httpClient *http.Client
 	log        nlogger.Logger
+	logDump    bool
 }
 
 func (c *Client) DoRequest(ctx context.Context, method Method, endpointPath string, args ...SetRequestOptionFn) (*http.Response, []byte, error) {
@@ -118,13 +120,16 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	// Do request
 	t := time.Now()
 	reqId := c.getRequestId(ctx)
-	c.log.Debugf("HTTP Request  (Id=%s) URL=\"%s %s\" Header=%s Body=%s", reqId, method, u, composeHeaderLog(req.Header), reqBody)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		c.log.Error("HTTP Request  (Id=%s) Failed to do request", logOption.Format(reqId), logOption.Error(err))
 		return nil, nil, err
 	}
-	c.log.Debugf("HTTP Response (Id=%s) Status=%s, TimeElapsed=%s", reqId, resp.Status, time.Since(t))
+	// If log dump is enabled, then log dump
+	if c.logDump {
+		c.log.Debugf("\n---------- HTTP Request Dump -----------\n%s\n----------------------------------------", c.dumpRequest(req))
+		c.log.Debugf("\n---------- HTTP Response Dump ----------\n%s\n----------------------------------------", c.dumpResponse(resp))
+	}
 	// Read response body
 	defer func() {
 		wErr := resp.Body.Close()
@@ -136,7 +141,7 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	if err != nil {
 		return nil, nil, err
 	}
-	c.log.Debugf("HTTP Response (Id=%s) Header=%s Body=%s", reqId, composeHeaderLog(resp.Header), respBody)
+	c.log.Debugf("HTTP Request  (Id=%s) URL=\"%s %s\" ResponseStatus=\"%s\" TimeElapsed=\"%s\"", reqId, req.Method, req.URL.String(), resp.Status, time.Since(t))
 	return resp, respBody, nil
 }
 
@@ -150,18 +155,20 @@ func (c *Client) getRequestId(ctx context.Context) string {
 	return reqId
 }
 
-func composeHeaderLog(header http.Header) string {
-	if len(header) == 0 {
+func (c *Client) dumpRequest(req *http.Request) string {
+	dump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		c.log.Warnf("Unable to dump request. Error = %s", err)
 		return ""
 	}
-	s := bytes.NewBufferString("")
-	for k := range header {
-		s.WriteString(`("`)
-		s.WriteString(k)
-		s.WriteString(`"="`)
-		s.WriteString(header.Get(k))
-		s.WriteString(`"),`)
+	return string(dump)
+}
+
+func (c *Client) dumpResponse(resp *http.Response) string {
+	dump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		c.log.Warnf("Unable to dump response. Error = %s", err)
+		return ""
 	}
-	// Remove last char
-	return strings.TrimSuffix(s.String(), ",")
+	return string(dump)
 }
