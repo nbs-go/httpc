@@ -180,3 +180,30 @@ func TestRestPreRequest(t *testing.T) {
 		return
 	}
 }
+
+func TestRestUpperCaseHeader(t *testing.T) {
+	///
+	dc := httpc.NewClient("https://eoi1s6bcfy7xh22.m.pipedream.net", httpc.Namespace("httpc_dump"), httpc.LogDump(true))
+	req := httpc.NewRESTRequest(dc, "GET", "/").
+		PreRequest(func(r *http.Request, rb []byte) {
+			// Add header
+			r.Header["SIGNATURE"] = []string{"some-random-string"}
+		})
+	// Do request
+	var respBody HttpBinResult
+	_, err := req.Do(context.Background(), &respBody)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	// Assert header
+	//if v, _ := respBody.Headers["SIGNATURE"]; v != "some-random-string" {
+	//	t.Errorf("unexpected condition: signature does not passed to headers. Actual = %s", v)
+	//	return
+	//}
+	//// Assert query
+	//if v, _ := respBody.Args["message"]; v != "hello" {
+	//	t.Errorf("unexpected condition: message mismatch")
+	//	return
+	//}
+}

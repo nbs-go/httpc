@@ -3,6 +3,7 @@ package httpc
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,8 +22,15 @@ func NewClient(baseUrl string, args ...SetClientOptionsFn) *Client {
 	o := evaluateClientOptions(args)
 	// Init logger
 	cl := nlogger.Get().NewChild(logOption.WithNamespace(o.namespace))
-	// Set default timeout
+	// Init Client
 	c := &http.Client{}
+	// Set transport
+	if o.disableHTTP2 {
+		c.Transport = &http.Transport{
+			TLSNextProto: map[string]func(string, *tls.Conn) http.RoundTripper{},
+		}
+		cl.Debugf("HTTP/2 automatic switch is disabled")
+	}
 	// Init client
 	return &Client{
 		baseUrl:    baseUrl,

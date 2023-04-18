@@ -199,3 +199,16 @@ func TestInvalidUrlEncodedFormBody(t *testing.T) {
 		return
 	}
 }
+
+func TestDisableHTTP2(t *testing.T) {
+	client := httpc.NewClient("https://httpbin.org", httpc.DisableHTTP2(), httpc.LogDump(true))
+	resp, _, err := client.DoRequest(context.Background(), "HEAD", "/")
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+	if resp.Proto != "HTTP/1.1" {
+		t.Errorf("unexpected protocol: %s", resp.Proto)
+		return
+	}
+}
