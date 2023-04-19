@@ -82,21 +82,29 @@ func SetUrlEncodedFormBody(body url.Values) SetRequestOptionFn {
 	}
 }
 
+func DisableCanonicalHeader() SetRequestOptionFn {
+	return func(o *requestOptions) {
+		o.canonicalHeader = false
+	}
+}
+
 type requestOptions struct {
-	header     map[string]string
-	query      url.Values
-	body       interface{}
-	timeout    int
-	preRequest PreRequestFn
+	canonicalHeader bool
+	header          map[string]string
+	query           url.Values
+	body            interface{}
+	timeout         int
+	preRequest      PreRequestFn
 }
 
 // evaluateClientOptions evaluates Client options and override default value
 func evaluateRequestOptions(args []SetRequestOptionFn) *requestOptions {
 	b := requestOptions{
-		header:  make(map[string]string),
-		query:   make(url.Values),
-		body:    nil,
-		timeout: 10000, // Set default timeout to 10 second
+		canonicalHeader: true,
+		header:          make(map[string]string),
+		query:           make(url.Values),
+		body:            nil,
+		timeout:         10000, // Set default timeout to 10 second
 	}
 	for _, fn := range args {
 		fn(&b)

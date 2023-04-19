@@ -118,9 +118,16 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 		return nil, nil, err
 	}
 	// Set header
-	for k, v := range o.header {
-		req.Header.Set(k, v)
+	if o.canonicalHeader {
+		for k, v := range o.header {
+			req.Header.Set(k, v)
+		}
+	} else {
+		for k, v := range o.header {
+			req.Header[k] = []string{v}
+		}
 	}
+
 	// Call pre-request hook if set
 	if o.preRequest != nil {
 		o.preRequest(req, reqBody)

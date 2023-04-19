@@ -17,6 +17,10 @@ type HttpBinResult struct {
 	Data    string            `json:"data"`
 }
 
+type HttpEchoApiResult struct {
+	Header map[string]string `json:"header"`
+}
+
 func TestRestGet(t *testing.T) {
 	req := httpc.NewRESTRequest(c, "GET", "/get")
 	var respBody HttpBinResult
@@ -182,28 +186,19 @@ func TestRestPreRequest(t *testing.T) {
 }
 
 func TestRestUpperCaseHeader(t *testing.T) {
-	///
-	dc := httpc.NewClient("https://eoi1s6bcfy7xh22.m.pipedream.net", httpc.Namespace("httpc_dump"), httpc.LogDump(true))
-	req := httpc.NewRESTRequest(dc, "GET", "/").
-		PreRequest(func(r *http.Request, rb []byte) {
-			// Add header
-			r.Header["SIGNATURE"] = []string{"some-random-string"}
-		})
+	dc := httpc.NewClient("https://echo-api.nbs.dev", httpc.Namespace("echo-api"), httpc.LogDump(true))
+	req := httpc.NewRESTRequest(dc, "GET", "/", httpc.DisableCanonicalHeader()).
+		AddHeader("MESSAGE", "hello")
 	// Do request
-	var respBody HttpBinResult
+	var respBody HttpEchoApiResult
 	_, err := req.Do(context.Background(), &respBody)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 		return
 	}
-	// Assert header
-	//if v, _ := respBody.Headers["SIGNATURE"]; v != "some-random-string" {
-	//	t.Errorf("unexpected condition: signature does not passed to headers. Actual = %s", v)
-	//	return
-	//}
-	//// Assert query
-	//if v, _ := respBody.Args["message"]; v != "hello" {
-	//	t.Errorf("unexpected condition: message mismatch")
-	//	return
-	//}
+	// Assert result
+	actual, _ := respBody.Header["MESSAGE"]
+	if actual != "hello" {
+		t.Errorf("unexpected value: %s", actual)
+	}
 }
