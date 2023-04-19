@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.5.0
+
+- feat: Add NonCanonicalHeader request options to preserve case
+- feat: Add option to disable automatic switch to HTTP/2
+
 ## v0.4.1
 
 - fix: Fix missing request body on log dump
