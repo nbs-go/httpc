@@ -65,8 +65,8 @@ func (rr *RESTRequest) Do(ctx context.Context, dst interface{}) (*http.Response,
 	if err != nil {
 		return nil, err
 	}
-	// Skip parsing json body if destination is nil
-	if dst == nil {
+	// Skip parsing json body if destination is nil or body is nil
+	if dst == nil || len(respBody) == 0 {
 		return resp, nil
 	}
 	// Parse response body as json
