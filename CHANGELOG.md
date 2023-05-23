@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.5.1
+
+- fix: Skip parsing json if response body is empty
+
 ## v0.5.0
 
 - feat: Add NonCanonicalHeader request options to preserve case
