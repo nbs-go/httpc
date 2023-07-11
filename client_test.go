@@ -2,23 +2,25 @@ package httpc_test
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"github.com/nbs-go/httpc"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 )
 
 var c *httpc.Client
 
 func init() {
-	c = httpc.NewClient("https://httpbin.org", httpc.Namespace("httpc_test"))
+	c = httpc.NewClient("https://httpbin.nbs.dev", httpc.Namespace("httpc_test"))
 }
 
 func TestTimeout(t *testing.T) {
-	ct := httpc.NewClient("https://httpbin.org")
+	ct := httpc.NewClient("https://httpbin.nbs.dev")
 	_, _, err := ct.DoRequest(context.Background(), "GET", "/delay/1", httpc.Timeout(100))
-	if err.Error() != `Get "https://httpbin.org/delay/1": context deadline exceeded` {
+	if err.Error() != `Get "https://httpbin.nbs.dev/delay/1": context deadline exceeded` {
 		t.Errorf("unexpected error: %s", err)
 		return
 	}
@@ -181,9 +183,10 @@ func TestRawBytesBody(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 		return
 	}
-	actual := result.Data
+	// Decode base64
+	actual, _ := base64.StdEncoding.DecodeString(strings.Replace(result.Data, "data:application/octet-stream;base64,", "", 1))
 	expected := "hello"
-	if actual != expected {
+	if string(actual) != expected {
 		t.Errorf("unexpected condition. Actual = %s, Expected = %s", actual, expected)
 		return
 	}
@@ -201,7 +204,7 @@ func TestInvalidUrlEncodedFormBody(t *testing.T) {
 }
 
 func TestDisableHTTP2(t *testing.T) {
-	client := httpc.NewClient("https://httpbin.org", httpc.DisableHTTP2(), httpc.LogDump(true))
+	client := httpc.NewClient("https://httpbin.nbs.dev", httpc.DisableHTTP2(), httpc.LogDump(true))
 	resp, _, err := client.DoRequest(context.Background(), "HEAD", "/")
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)

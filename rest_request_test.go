@@ -2,6 +2,7 @@ package httpc_test
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/nbs-go/httpc"
 	"net/http"
 	"net/url"
@@ -9,12 +10,15 @@ import (
 )
 
 type HttpBinResult struct {
+	Method  string            `json:"method"`
 	Url     string            `json:"url"`
-	Args    map[string]string `json:"args"`
-	Json    map[string]string `json:"json"`
-	Form    map[string]string `json:"form"`
-	Headers map[string]string `json:"headers"`
+	Origin  string            `json:"origin"`
+	Headers url.Values        `json:"headers"`
+	Args    url.Values        `json:"args"`
 	Data    string            `json:"data"`
+	Files   json.RawMessage   `json:"files"`
+	Form    url.Values        `json:"form"`
+	Json    map[string]string `json:"json"`
 }
 
 type HttpEchoApiResult struct {
@@ -30,7 +34,7 @@ func TestRestGet(t *testing.T) {
 		return
 	}
 	// Assert value
-	expected := "https://httpbin.org/get"
+	expected := "https://httpbin.nbs.dev/get"
 	if respBody.Url != expected {
 		t.Errorf("unexpected actual value. Expected = %s, Actual = %s", expected, respBody.Url)
 	}
@@ -48,7 +52,7 @@ func TestRestGetQuery(t *testing.T) {
 	// Assert value
 	expected := "hello"
 	actual, _ := respBody.Args["message"]
-	if actual != expected {
+	if len(actual) == 1 && actual[0] != expected {
 		t.Errorf("unexpected actual value. Expected = %s, Actual = %s", expected, actual)
 	}
 }
@@ -62,7 +66,7 @@ func TestRestPost(t *testing.T) {
 		return
 	}
 	// Assert value
-	expected := "https://httpbin.org/post"
+	expected := "https://httpbin.nbs.dev/post"
 	if respBody.Url != expected {
 		t.Errorf("unexpected actual value. Expected = %s, Actual = %s", expected, respBody.Url)
 	}
@@ -124,7 +128,7 @@ func TestRestAddOption(t *testing.T) {
 	// Assert value
 	expected := "hello"
 	actual, _ := respBody.Args["message"]
-	if actual != expected {
+	if len(actual) == 1 && actual[0] != expected {
 		t.Errorf("unexpected actual value. Expected = %s, Actual = %s", expected, actual)
 	}
 }
@@ -152,13 +156,13 @@ func TestRestUrlEncodedForm(t *testing.T) {
 	// Assert value
 	expected := "hello"
 	actual, _ := respBody.Form["message"]
-	if actual != expected {
+	if len(actual) == 1 && actual[0] != expected {
 		t.Errorf("unexpected actual value. Expected = %s, Actual = %s", expected, actual)
 	}
 }
 
 func TestRestPreRequest(t *testing.T) {
-	dc := httpc.NewClient("https://httpbin.org", httpc.Namespace("httpc_dump"), httpc.LogDump(true))
+	dc := httpc.NewClient("https://httpbin.nbs.dev", httpc.Namespace("httpc_dump"), httpc.LogDump(true))
 	req := httpc.NewRESTRequest(dc, "GET", "/anything").
 		PreRequest(func(r *http.Request, rb []byte) {
 			// Add header
@@ -174,12 +178,12 @@ func TestRestPreRequest(t *testing.T) {
 		return
 	}
 	// Assert header
-	if v, _ := respBody.Headers["Signature"]; v != "some-random-string" {
+	if v, _ := respBody.Headers["Signature"]; len(v) == 1 && v[0] != "some-random-string" {
 		t.Errorf("unexpected condition: signature does not passed to headers. Actual = %s", v)
 		return
 	}
 	// Assert query
-	if v, _ := respBody.Args["message"]; v != "hello" {
+	if v, _ := respBody.Args["message"]; len(v) == 1 && v[0] != "hello" {
 		t.Errorf("unexpected condition: message mismatch")
 		return
 	}
