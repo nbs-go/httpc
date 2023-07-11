@@ -18,7 +18,9 @@ go get -u github.com/nbs-go/httpc
 
 ## Breaking Changes
 
-N/A
+### v0.6.0
+
+- Upgrade Go minimum version to 1.19
 
 ## Usage
 
