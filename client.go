@@ -16,16 +16,20 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 )
 
 var instrumentation Instrumentation
+var envMutex sync.RWMutex
 
 func init() {
 	LoadEnv()
 }
 
 func LoadEnv() {
+	envMutex.Lock()
+	defer envMutex.Unlock()
 	// Set instrumentation using OpenTelemetry env
 	ev := os.Getenv("OTEL_TRACE_HTTPC")
 	if ev == "true" {
