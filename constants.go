@@ -15,8 +15,8 @@ const (
 	ContextRequestId = iota + 1
 )
 
-type Instrumentation = string
+type Instrumentation int8
 
 const (
-	InstrumentationOpenTelemetry = "opentelemetry"
+	InstrumentationOpenTelemetry = iota + 1
 )

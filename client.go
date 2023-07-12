@@ -22,8 +22,22 @@ import (
 var instrumentation Instrumentation
 
 func init() {
-	// Load instrumentation
-	instrumentation = os.Getenv("HTTPC_INSTRUMENTATION")
+	LoadEnv()
+}
+
+func LoadEnv() {
+	// Set instrumentation using OpenTelemetry env
+	ev := os.Getenv("OTEL_TRACE_HTTPC")
+	if ev == "true" {
+		instrumentation = InstrumentationOpenTelemetry
+		return
+	}
+	// Set instrumentation using httpc
+	ev = os.Getenv("HTTPC_INSTRUMENTATION")
+	if ev == "opentelemetry" {
+		instrumentation = InstrumentationOpenTelemetry
+		return
+	}
 }
 
 func NewClient(baseUrl string, args ...SetClientOptionsFn) *Client {
