@@ -26,6 +26,10 @@ go get -u github.com/nbs-go/httpc
 
 > TODO
 
+### Enable OpenTelemetry Instrumentation
+
+- Set environment variable `HTTPC_INSTRUMENTATION=opentelemetry`
+
 ## Contributors
 
 <a href="https://github.com/nbs-go/nsql/graphs/contributors">

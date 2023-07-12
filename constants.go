@@ -14,3 +14,9 @@ type ContextKey int8
 const (
 	ContextRequestId = iota + 1
 )
+
+type Instrumentation = string
+
+const (
+	InstrumentationOpenTelemetry = "opentelemetry"
+)

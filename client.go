@@ -10,12 +10,21 @@ import (
 	"github.com/google/uuid"
 	"github.com/nbs-go/nlogger/v2"
 	logOption "github.com/nbs-go/nlogger/v2/option"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"time"
 )
+
+var instrumentation Instrumentation
+
+func init() {
+	// Load instrumentation
+	instrumentation = os.Getenv("HTTPC_INSTRUMENTATION")
+}
 
 func NewClient(baseUrl string, args ...SetClientOptionsFn) *Client {
 	// Evaluate options
@@ -30,6 +39,10 @@ func NewClient(baseUrl string, args ...SetClientOptionsFn) *Client {
 			TLSNextProto: map[string]func(string, *tls.Conn) http.RoundTripper{},
 		}
 		cl.Debugf("HTTP/2 automatic switch is disabled")
+	}
+	// Wrap OpenTelemetry instrumentation
+	if instrumentation == InstrumentationOpenTelemetry {
+		c.Transport = otelhttp.NewTransport(c.Transport)
 	}
 	// Init client
 	return &Client{
