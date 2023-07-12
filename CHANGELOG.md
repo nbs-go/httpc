@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.6.1
+
+- fix(instrumentation): Add mutex to lock global instrumentation variable
+- feat(instrumentation): Add env OTEL_TRACE_HTTPC to enable OpenTelemetry
+
 ## v0.6.0
 
 - feat(instrumentation): Add OpenTelemetry instrumentation
