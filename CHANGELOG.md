@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.6.0
+
+- feat(instrumentation): Add OpenTelemetry instrumentation
+- BREAKING CHANGE: Upgrade Go minimum version to 1.19
+
 ## v0.5.1
 
 - fix: Skip parsing json if response body is empty
