@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.6.2
+
+- fix(log): Add context to include metadata from context
+
 ## v0.6.1
 
 - fix(instrumentation): Add mutex to lock global instrumentation variable
