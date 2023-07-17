@@ -83,7 +83,7 @@ func (c *Client) DoRequest(ctx context.Context, method Method, endpointPath stri
 	return c.doRequest(ctx, method, endpointPath, o)
 }
 
-func (c *Client) composeRequestBody(method Method, o *requestOptions) ([]byte, error) {
+func (c *Client) composeRequestBody(ctx context.Context, method Method, o *requestOptions) ([]byte, error) {
 	if method == MethodGet || o.body == nil {
 		return nil, nil
 	}
@@ -109,7 +109,7 @@ func (c *Client) composeRequestBody(method Method, o *requestOptions) ([]byte, e
 		}
 		return []byte(form.Encode()), nil
 	}
-	c.log.Warnf("Unsupported Content-Type in %s in request body", ct)
+	c.log.Warn("Unsupported Content-Type in %s in request body", logOption.Format(ct), logOption.Context(ctx))
 	return nil, nil
 }
 
@@ -128,7 +128,7 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	}
 	u := ub.String()
 	// Compose request body
-	reqBody, err := c.composeRequestBody(method, o)
+	reqBody, err := c.composeRequestBody(ctx, method, o)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -166,25 +166,30 @@ func (c *Client) doRequest(ctx context.Context, method Method, endpointPath stri
 	// Do request
 	t := time.Now()
 	reqId := c.getRequestId(ctx)
-	c.logDumpRequest(req, reqId)
+	c.logDumpRequest(ctx, req, reqId)
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		c.log.Error("HTTP Request  (Id=%s) Failed to do request", logOption.Format(reqId), logOption.Error(err))
+		c.log.Error("HTTP Request  (Id=%s) Failed to do request", logOption.Format(reqId), logOption.Error(err), logOption.Context(ctx))
 		return nil, nil, err
 	}
-	c.logDumpResponse(resp, reqId)
+	c.logDumpResponse(ctx, resp, reqId)
 	// Read response body
 	defer func() {
 		wErr := resp.Body.Close()
 		if wErr != nil {
-			c.log.Warnf("HTTP Response (Id=%s) Failed to close Body reader. ID = %s, Error = %s", reqId, wErr)
+			c.log.Warn("HTTP Response (Id=%s) Failed to close Body reader. ID = %s, Error = %s",
+				logOption.Format(reqId, wErr), logOption.Context(ctx),
+			)
 		}
 	}()
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, nil, err
 	}
-	c.log.Debugf("HTTP Request  (Id=%s) URL=\"%s %s\" ResponseStatus=\"%s\" TimeElapsed=\"%s\"", reqId, req.Method, req.URL.String(), resp.Status, time.Since(t))
+	c.log.Debug("HTTP Request  (Id=%s) URL=\"%s %s\" ResponseStatus=\"%s\" TimeElapsed=\"%s\"",
+		logOption.Format(reqId, req.Method, req.URL.String(), resp.Status, time.Since(t)),
+		logOption.Context(ctx),
+	)
 	return resp, respBody, nil
 }
 
@@ -198,26 +203,30 @@ func (c *Client) getRequestId(ctx context.Context) string {
 	return reqId
 }
 
-func (c *Client) logDumpRequest(req *http.Request, reqId string) {
+func (c *Client) logDumpRequest(ctx context.Context, req *http.Request, reqId string) {
 	if !c.logDump {
 		return
 	}
 	dump, err := httputil.DumpRequest(req, true)
 	if err != nil {
-		c.log.Warnf("Unable to dump request. Error = %s", err)
+		c.log.Warn("Unable to dump request. Error = %s", logOption.Format(err), logOption.Context(ctx))
 		return
 	}
-	c.log.Debugf("\n---------- HTTP Request Dump -----------\n(RequestId=%s)\n%s\n----------------------------------------", reqId, dump)
+	c.log.Debug("\n---------- HTTP Request Dump -----------\n(RequestId=%s)\n%s\n----------------------------------------",
+		logOption.Format(reqId, dump), logOption.Context(ctx),
+	)
 }
 
-func (c *Client) logDumpResponse(resp *http.Response, reqId string) {
+func (c *Client) logDumpResponse(ctx context.Context, resp *http.Response, reqId string) {
 	if !c.logDump {
 		return
 	}
 	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
-		c.log.Warnf("Unable to dump response. Error = %s", err)
+		c.log.Warn("Unable to dump response. Error = %s", logOption.Format(err), logOption.Context(ctx))
 		return
 	}
-	c.log.Debugf("\n---------- HTTP Response Dump ----------\n(RequestId=%s)\n%s\n----------------------------------------", reqId, dump)
+	c.log.Debug("\n---------- HTTP Response Dump ----------\n(RequestId=%s)\n%s\n----------------------------------------",
+		logOption.Format(reqId, dump), logOption.Context(ctx),
+	)
 }
