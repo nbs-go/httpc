@@ -18,6 +18,11 @@ go get -u github.com/nbs-go/httpc
 
 ## Breaking Changes
 
+### v0.7.0
+
+- Revert Go minimum version to 1.17
+- Remove built-in OpenTelemetry instrumentation, replaced with `SetGlobalTransporterOverrider()` function
+
 ### v0.6.0
 
 - Upgrade Go minimum version to 1.19
@@ -28,7 +33,24 @@ go get -u github.com/nbs-go/httpc
 
 ### Enable OpenTelemetry Instrumentation
 
-- Set environment variable `HTTPC_INSTRUMENTATION=opentelemetry`
+```
+package main
+
+import (
+	"github.com/nbs-go/httpc"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"net/http"
+)
+
+// On init() package, SetGlobalTransporterOverrider to enable OpenTelemetry instrumentation
+// across all initiated httpc.Client
+func init() {
+	httpc.SetGlobalTransporterOverrider(func(existingTransporter http.RoundTripper) http.RoundTripper {
+		// Wrap existingTransporter with otelhttp.Transporter to enable instrumentation
+		return otelhttp.NewTransport(existingTransporter)
+	})
+}
+```
 
 ## Contributors
 
