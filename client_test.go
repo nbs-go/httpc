@@ -2,6 +2,7 @@ package httpc_test
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"github.com/nbs-go/httpc"
@@ -210,6 +211,31 @@ func TestDisableHTTP2(t *testing.T) {
 		t.Errorf("unexpected error: %s", err)
 		return
 	}
+	if resp.Proto != "HTTP/1.1" {
+		t.Errorf("unexpected protocol: %s", resp.Proto)
+		return
+	}
+}
+
+func TestOverrideTransporter(t *testing.T) {
+	// Disable HTTP2 using httpc.TransporterOverrider
+	httpc.SetGlobalTransporterOverrider(func(_ http.RoundTripper) http.RoundTripper {
+		return &http.Transport{
+			TLSNextProto: map[string]func(string, *tls.Conn) http.RoundTripper{},
+		}
+	})
+
+	// Init client
+	client := httpc.NewClient("https://httpbin.nbs.dev", httpc.LogDump(true))
+
+	// Do request
+	resp, _, err := client.DoRequest(context.Background(), "HEAD", "/")
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+		return
+	}
+
+	// Assert response
 	if resp.Proto != "HTTP/1.1" {
 		t.Errorf("unexpected protocol: %s", resp.Proto)
 		return

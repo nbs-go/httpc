@@ -10,38 +10,30 @@ import (
 	"github.com/google/uuid"
 	"github.com/nbs-go/nlogger/v2"
 	logOption "github.com/nbs-go/nlogger/v2/option"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
 	"sync"
 	"time"
 )
 
-var instrumentation Instrumentation
-var envMutex sync.RWMutex
+// TransporterOverrider is a function to override how http client Transporter value.
+// Could be used to wrap existing client Transporter (rt) for instrumentation or override Transporter value
+type TransporterOverrider func(existing http.RoundTripper) http.RoundTripper
 
-func init() {
-	LoadEnv()
-}
+var overrideTransporter TransporterOverrider
+var toMutex sync.RWMutex
 
-func LoadEnv() {
-	envMutex.Lock()
-	defer envMutex.Unlock()
-	// Set instrumentation using OpenTelemetry env
-	ev := os.Getenv("OTEL_TRACE_HTTPC")
-	if ev == "true" {
-		instrumentation = InstrumentationOpenTelemetry
-		return
-	}
-	// Set instrumentation using httpc
-	ev = os.Getenv("HTTPC_INSTRUMENTATION")
-	if ev == "opentelemetry" {
-		instrumentation = InstrumentationOpenTelemetry
-		return
-	}
+// SetGlobalTransporterOverrider set value to global overrideTransporter function. This function will override every
+// transporter initiated afterward.
+// Example use case is to wrap http.Client Transporter field with instrumentation such as OpenTelemetry otelhttp package (go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp)
+func SetGlobalTransporterOverrider(fn TransporterOverrider) {
+	// Acquire lock
+	toMutex.Lock()
+	defer toMutex.Unlock()
+	// Set setter function
+	overrideTransporter = fn
 }
 
 func NewClient(baseUrl string, args ...SetClientOptionsFn) *Client {
@@ -58,9 +50,9 @@ func NewClient(baseUrl string, args ...SetClientOptionsFn) *Client {
 		}
 		cl.Debugf("HTTP/2 automatic switch is disabled")
 	}
-	// Wrap OpenTelemetry instrumentation
-	if instrumentation == InstrumentationOpenTelemetry {
-		c.Transport = otelhttp.NewTransport(c.Transport)
+	// If TransporterOverrider is set, then call function
+	if overrideTransporter != nil {
+		c.Transport = overrideTransporter(c.Transport)
 	}
 	// Init client
 	return &Client{
