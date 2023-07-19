@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.7.0
+
+- fix: Set Go runtime requirement to v1.17
+- BREAKING CHANGE: Remove built-in OpenTelemetry dependencies. Use SetGlobalTransporterOverrider to wrap httpc.Client Transporter instead
+- BREAKING CHANGE: Add SetGlobalTransporterOverrider to override initiated httpc.Client Transporter
+
 ## v0.6.2
 
 - fix(log): Add context to include metadata from context
